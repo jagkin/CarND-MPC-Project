@@ -127,6 +127,12 @@ int main() {
             //px, py, psi, v, cte, epsi
             state << 0, 0, 0, v, cte, epsi;
 
+
+	    if(fabs(cte) > 4.0) {
+              cout << "Car is off track!!!\n";
+              return;
+            } 
+
             /*
              * TODO: Calculate steering angle and throttle using MPC.
              *
@@ -138,7 +144,7 @@ int main() {
             // Set distane between center of gravity and front axle.
             double Lf = 2.67;
 
-            double steer_value = vars[0]/(deg2rad(25)*Lf);
+            double steer_value = -vars[0]/(deg2rad(25)*Lf);
             double throttle_value = vars[1];
 
             json msgJson;

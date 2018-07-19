@@ -61,21 +61,26 @@ class FG_eval {
 
     // The part of the cost based on the reference state.
     for (auto t = 0u; t < N; t++) {
-      fg[0] += 1 * CppAD::pow(vars[cte_start + t] - ref_cte, 2);
-      fg[0] += 1 * CppAD::pow(vars[epsi_start + t] - ref_epsi, 2);
+      fg[0] += 2000 * CppAD::pow(vars[cte_start + t] - ref_cte, 2);
+      fg[0] += 2000 * CppAD::pow(vars[epsi_start + t] - ref_epsi, 2);
       fg[0] += 1 * CppAD::pow(vars[v_start + t] - ref_v, 2);
     }
 
     // Minimize the use of actuators.
     for (auto t = 0u; t < N - 1; t++) {
-      fg[0] += 1 * CppAD::pow(vars[delta_start + t], 2);
-      fg[0] += 1 * CppAD::pow(vars[a_start + t], 2);
+      fg[0] += 5 * CppAD::pow(vars[delta_start + t], 2);
+      fg[0] += 5 * CppAD::pow(vars[a_start + t], 2);
     }
 
     // Minimize the value gap between sequential actuations.
     for (auto t = 0u; t < N - 2; t++) {
-      fg[0] += 1 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
-      fg[0] += 1 * CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
+      AD<double> diff_delta = vars[delta_start + t + 1] - vars[delta_start + t];
+      fg[0] += 10 * CppAD::pow(diff_delta, 2);
+      AD<double> diff_a = vars[a_start + t + 1] - vars[a_start + t];
+      fg[0] += 5 * CppAD::pow(diff_a, 2);
+      AD<double> diff_v = vars[v_start + t + 1] - vars[v_start + t];
+      fg[0] += 10 * diff_v * CppAD::fabs(diff_delta); // Punish acceleration when around corner.
+      fg[0] += 10 * diff_a * CppAD::fabs(diff_delta); // Punish acceleration when around corner.
     }
 
     // Set up constraints
