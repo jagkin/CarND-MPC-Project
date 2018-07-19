@@ -23,6 +23,9 @@ double rad2deg(double x) {
   return x * 180 / pi();
 }
 
+// Delay in milliseconds
+constexpr delay_ms = 100;
+
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
 // else the empty string "" will be returned.
@@ -76,6 +79,9 @@ int main() {
 
   // MPC is initialized here!
   MPC mpc;
+
+  double delay_seconds = delay_ms/1000; // convert to seconds
+  mpc.SetDelay(delay_seconds);
 
   h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
       uWS::OpCode opCode) {
@@ -171,7 +177,7 @@ int main() {
             //Display the waypoints/reference line
             vector<double> next_x_vals;
             vector<double> next_y_vals;
-            double poly_inc(2.5);
+            double poly_inc(2.0);
             int num_pts(20);
             for (auto i=1; i<num_pts;i++) {
               next_x_vals.push_back(poly_inc*i);
@@ -194,7 +200,7 @@ int main() {
             //
             // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE
             // SUBMITTING.
-            //this_thread::sleep_for(chrono::milliseconds(100));
+            this_thread::sleep_for(chrono::milliseconds(delay_ms));
             ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
           }
         } else {

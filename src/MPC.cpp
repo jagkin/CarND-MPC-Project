@@ -142,8 +142,20 @@ class FG_eval {
 // MPC class definition implementation.
 //
 MPC::MPC() {
+ delay = 0;
 }
+
 MPC::~MPC() {
+}
+
+void MPC::SetDelay(double delay_seconds) {
+  if (delay_seconds < (N * dt)) {
+    size_t delay = static_cast<size_t>(delay_seconds/dt);
+    cout << "MPC::SetDelay delay. " << delay_seconds << " sec. " << delay << " steps\n";
+  } else {
+    cout << "MPC::SetDelay delay is too large\n";
+  } 
+  return;
 }
 
 vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
@@ -261,8 +273,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 
   vector<double> result;
 
-  result.push_back(solution.x[delta_start]);
-  result.push_back(solution.x[a_start]);
+  result.push_back(solution.x[delta_start + delay]);
+  result.push_back(solution.x[a_start + delay]);
   std::cout << "Steer: " << result[0] << " Throttle:" << result[1] << std::endl;
   for(auto i=1u; i<N; i++) {
     result.push_back(solution.x[x_start + i]);
