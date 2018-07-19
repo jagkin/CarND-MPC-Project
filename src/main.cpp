@@ -23,8 +23,8 @@ double rad2deg(double x) {
   return x * 180 / pi();
 }
 
-// Delay in milliseconds
-constexpr delay_ms = 100;
+// Delay in seconds
+constexpr double delay_seconds = 0.0;
 
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
@@ -80,10 +80,11 @@ int main() {
   // MPC is initialized here!
   MPC mpc;
 
-  double delay_seconds = delay_ms/1000; // convert to seconds
+  // Set delay
   mpc.SetDelay(delay_seconds);
+  int delay_ms = static_cast<int>(delay_seconds*1000); // convert to milliseconds
 
-  h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+  h.onMessage([&mpc, &delay_ms](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
       uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
