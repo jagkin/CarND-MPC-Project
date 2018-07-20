@@ -6,7 +6,7 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 5;
+size_t N = 10;
 double dt = 0.1;
 
 // This value assumes the model presented in the classroom is used.
@@ -59,29 +59,39 @@ class FG_eval {
     // TODO: Define the cost related the reference state and
     // any anything you think may be beneficial.
 
+    cout << fg[0] << endl;
     // The part of the cost based on the reference state.
     for (auto t = 0u; t < N; t++) {
-      fg[0] += 2000 * CppAD::pow(vars[cte_start + t] - ref_cte, 2);
-      fg[0] += 2000 * CppAD::pow(vars[epsi_start + t] - ref_epsi, 2);
-      fg[0] += 1 * CppAD::pow(vars[v_start + t] - ref_v, 2);
+      AD<double> cte_err = vars[cte_start + t] - ref_cte;
+      fg[0] += 5000 * CppAD::abs(cte_err);
+      AD<double> eps_err = vars[epsi_start + t] - ref_epsi;
+      fg[0] += 5000 * CppAD::abs(eps_err);
+      AD<double> v_err = vars[v_start + t] - ref_v;
+      fg[0] += 1 * CppAD::abs(v_err);
+      cout << "cte_err: " << cte_err << " eps_err:" << eps_err << " v_err:" << v_err << endl;
     }
+    cout << fg[0] << endl;
 
     // Minimize the use of actuators.
-    for (auto t = 0u; t < N - 1; t++) {
-      fg[0] += 5 * CppAD::pow(vars[delta_start + t], 2);
-      fg[0] += 5 * CppAD::pow(vars[a_start + t], 2);
+    for (auto t = 0u; t < N - 1; t++) {      
+      fg[0] += 50 * CppAD::abs(vars[delta_start + t]);
+      fg[0] += 50 * CppAD::abs(vars[a_start + t]);
+      cout << "delta: " << vars[delta_start + t] << " a:" << vars[a_start + t] << endl;
     }
+    cout << fg[0] << endl;
 
     // Minimize the value gap between sequential actuations.
     for (auto t = 0u; t < N - 2; t++) {
       AD<double> diff_delta = vars[delta_start + t + 1] - vars[delta_start + t];
-      fg[0] += 10 * CppAD::pow(diff_delta, 2);
+      fg[0] += 50 * CppAD::abs(diff_delta);
       AD<double> diff_a = vars[a_start + t + 1] - vars[a_start + t];
-      fg[0] += 5 * CppAD::pow(diff_a, 2);
+      fg[0] += 1 * CppAD::abs(diff_a);
       AD<double> diff_v = vars[v_start + t + 1] - vars[v_start + t];
-      fg[0] += 10 * diff_v * CppAD::fabs(diff_delta); // Punish acceleration when around corner.
-      fg[0] += 10 * diff_a * CppAD::fabs(diff_delta); // Punish acceleration when around corner.
+      fg[0] += 500 * diff_v * CppAD::abs(diff_delta); // Punish acceleration when around corner.
+      fg[0] += 500 * diff_a * CppAD::abs(diff_delta); // Punish acceleration when around corner.
+      cout << "diff_delta: " << diff_delta << " diff_v:" << diff_v << " diff_a:" << diff_a << endl;
     }
+    cout << fg[0] << endl;
 
     // Set up constraints
     fg[1 + x_start] = vars[x_start];
@@ -154,7 +164,8 @@ void MPC::SetDelay(double delay_seconds) {
     cout << "MPC::SetDelay delay. " << delay_seconds << " sec. " << delay << " steps\n";
   } else {
     cout << "MPC::SetDelay delay is too large\n";
-  } 
+  }
+  cout << "Test CppAD:Abs: abs(0.2): " << CppAD::fabs(0.2) << CppAD::fabs(-0.2) << endl; 
   return;
 }
 
@@ -184,6 +195,12 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   for (auto i = 0u; i < n_vars; i++) {
     vars[i] = 0;
   }
+  vars[x_start] = x;
+  vars[y_start] = y;
+  vars[psi_start] = psi;
+  vars[v_start] = v;
+  vars[cte_start] = cte;
+  vars[epsi_start] = epsi;
 
   Dvector vars_lowerbound(n_vars);
   Dvector vars_upperbound(n_vars);
