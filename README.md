@@ -22,14 +22,14 @@ The vehicle can be controlled using following actuations,
 1. delta => Steering angle. Constrained to +25 to -25 degree. 
 2. a => Throttle controlling the acceleration. -ve values imply deceleration/break.
 Following are the update equations used to compute new state of the vehicle, given previous state and actuations.
-'''
+```
   // x_[t] = x[t-1] + v[t-1] * cos(psi[t-1]) * dt
   // y_[t] = y[t-1] + v[t-1] * sin(psi[t-1]) * dt
   // psi_[t] = psi[t-1] + v[t-1] / Lf * delta[t-1] * dt
   // v_[t] = v[t-1] + a[t-1] * dt
   // cte[t] = f(x[t-1]) - y[t-1] + v[t-1] * sin(epsi[t-1]) * dt
   // epsi[t] = psi[t] - psides[t-1] + v[t-1] * delta[t-1] / Lf * dt
- '''
+ ```
  where Lf => Distance between steering wheel and the front axle. In this project it is set to 2.67m
  f(x) => 3rd degree polynomical describing the reference path of the vehicle.
 
@@ -46,14 +46,14 @@ To address the latency, I initially tried to simply send the actuation values co
 But this did not work out as the model had used incorrect actuations for updating states.
 I then decided to apply the delay to the input state. To compute the next state I used the same Kinematic model equations as above.
 I added following new variables to class MPC for this purpose.
-'''
+```  
   // Delay in seconds
   double delay_sec;
   // Previous steering angle actuation
   double pre_delta;
   // Previous throttle actuation
   double pre_a;
-'''
+```
 ### Simulation
 #### The vehicle must successfully drive a lap around the track.
 The vehicle drives around the track atleast few laps (atleast 5 laps). I noticed that the vehicle does go off the track after sometimes, may be the weights used in cost functions are not yet optimal.
