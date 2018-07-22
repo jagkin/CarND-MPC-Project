@@ -1,5 +1,63 @@
 # CarND-Controls-MPC
-Self-Driving Car Engineer Nanodegree Program
+This is my submission for Project 5 of Term 2 of Udacity's Self-Driving Car Engineer Nanodegree Program.
+
+The objective of the project was to use Model Predictive Control (MPC) to implement a controller for actuation of steering angle and accelerator/break of a car in simulator. Here I address the Project rubric points (https://review.udacity.com/#!/rubrics/896/view)
+
+
+## Rubric points
+### Compilation
+#### Your code should compile.
+Code can be compiled using cmake and make. No changes were necessary for CMake files.
+### Implementation
+#### The Model
+The project uses Kinematic model to describe the vehicle in motion. Kinematic model ignore the forces like tire forces, gravity, drag, inertia, mass and geometry of the vehicle. The model can predict the motion of the vehicle at lower speeds but at higher speeds the model is not reliable.
+The state of the vehicle contains following dimensions,
+1. x => Position of the vehicle along x axis
+2. y => Position of the vehicle along y axis
+3. psi => Orientation of the vehicle with respect to x-axis
+4. v => Velocity of the vehicle
+5. cte => Cross track error, vehicle offset from the reference axis.
+6. epsi => Difference between vehicle orientation and reference orientation.
+The vehicle can be controlled using following actuations,
+1. delta => Steering angle. Constrained to +25 to -25 degree. 
+2. a => Throttle controlling the acceleration. -ve values imply deceleration/break.
+Following are the update equations used to compute new state of the vehicle, given previous state and actuations.
+'''
+  // x_[t] = x[t-1] + v[t-1] * cos(psi[t-1]) * dt
+  // y_[t] = y[t-1] + v[t-1] * sin(psi[t-1]) * dt
+  // psi_[t] = psi[t-1] + v[t-1] / Lf * delta[t-1] * dt
+  // v_[t] = v[t-1] + a[t-1] * dt
+  // cte[t] = f(x[t-1]) - y[t-1] + v[t-1] * sin(epsi[t-1]) * dt
+  // epsi[t] = psi[t] - psides[t-1] + v[t-1] * delta[t-1] / Lf * dt
+ '''
+ where Lf => Distance between steering wheel and the front axle. In this project it is set to 2.67m
+ f(x) => 3rd degree polynomical describing the reference path of the vehicle.
+
+#### Timestep Length and Elapsed Duration (N & dt)
+Timestep dt was choosen to be 0.1 seconds and N to be 10. Both values were choosen based on the values used in the assignment.
+
+#### Polynomial Fitting and MPC Preprocessing
+The simulator provides the waypoints (along with vehicle state and actuations). The waypoints are in map coordinates, transforming them to vehicle coordinate system simplifies the calculation of cte and epsi. This transformation is described in line #110 to #131 of main.cpp
+
+#### Model Predictive Control with Latency
+I commented out the sleep in main.cpp and tuned the coefficients in cost function to make sure the car can go around the track atleast once. At the starts of the driving the diff_v component seems to dominate the cost, I could not come up with optimal weights for errors/actuations/actuation-diffs with reference velocity of 100. I initially reduced it to 50 and then tuned the weights, I then slowly tried to increase the speed, I noticed that with values above 65, the vehicle would go off the track after few laps (2 or 3).
+I decided to settle at 65.
+To address the latency, I initially tried to simply send the actuation values computed for time t + delay_in_time_steps.
+But this did not work out as the model had used incorrect actuations for updating states.
+I then decided to apply the delay to the input state. To compute the next state I used the same Kinematic model equations as above.
+I added following new variables to class MPC for this purpose.
+'''
+  // Delay in seconds
+  double delay_sec;
+  // Previous steering angle actuation
+  double pre_delta;
+  // Previous throttle actuation
+  double pre_a;
+'''
+### Simulation
+#### The vehicle must successfully drive a lap around the track.
+The vehicle drives around the track atleast few laps (atleast 5 laps). I noticed that the vehicle does go off the track after sometimes, may be the weights used in cost functions are not yet optimal.
+
 
 ---
 
